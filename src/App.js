@@ -10,11 +10,11 @@ import MessagePage from './pages/MessagePage';
 import ProfilePage from './pages/ProfilePage';
 import Footer from './components/Footer';
 import './App.css';
-import { ProductProvider } from './context/ProductContext';
+import { ProductProvider, useProducts } from './context/ProductContext';
 
-function App() {
-  const [favorites, setFavorites] = useState([]);
+function AppContent() {
   const [hasNewMessages, setHasNewMessages] = useState(false);
+  const { favorites, toggleFavorite, isProductFavorited } = useProducts();
   
   // Mock current user for demonstration
   const [currentUser] = useState({
@@ -45,25 +45,7 @@ function App() {
     return () => clearInterval(interval);
   }, []);
   
-  const toggleFavorite = (product) => {
-    // Check if the product is already in favorites
-    const isProductInFavorites = favorites.some(item => item.id === product.id);
-    
-    if (isProductInFavorites) {
-      // Remove from favorites
-      setFavorites(favorites.filter(item => item.id !== product.id));
-    } else {
-      // Add to favorites
-      setFavorites([...favorites, product]);
-    }
-  };
-  
-  const isProductFavorited = (productId) => {
-    return favorites.some(item => item.id === productId);
-  };
-  
   return (
-    <ProductProvider>
     <Router>
       <div className="app">
         <Header favoritesCount={favorites.length} hasNewMessages={hasNewMessages} />
@@ -105,6 +87,13 @@ function App() {
         <Footer />
       </div>
     </Router>
+  );
+}
+
+function App() {
+  return (
+    <ProductProvider>
+      <AppContent />
     </ProductProvider>
   );
 }

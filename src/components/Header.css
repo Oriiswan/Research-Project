@@ -34,8 +34,21 @@
 
 
 
+.favorites {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.favorites img {
+  width: 20px;
+  height: 20px;
+}
+
 .favorites-count {
-  display: inline-block;
+  position: absolute;
+  top: -8px;
+  right: -8px;
   background-color: #e24a4a;
   color: white;
   border-radius: 50%;
@@ -44,6 +57,8 @@
   text-align: center;
   line-height: 20px;
   font-size: 12px;
+  font-weight: bold;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
 }
 
 .user-profile {
@@ -66,8 +81,4 @@
   display: flex;
   align-items: center;
   justify-content: center;
-}
-
-.favorites img {
-  width: 20px;
 }

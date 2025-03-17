@@ -3,8 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import './ProductCard.css';
 import { useProducts } from '../context/ProductContext';
 
-function ProductCard({ product, toggleFavorite: propToggleFavorite, isFavorite, currentUser }) {
-  const { isProductFavorited, toggleFavorite: contextToggleFavorite } = useProducts();
+function ProductCard({ product, toggleFavorite, isFavorite, currentUser }) {
+  const { isProductFavorited: contextIsProductFavorited, addToFavorites } = useProducts();
   const { id, title, price, image, inStock, condition, seller, sellerId } = product;
   const [showMessageModal, setShowMessageModal] = useState(false);
   const [message, setMessage] = useState('');
@@ -14,7 +14,7 @@ function ProductCard({ product, toggleFavorite: propToggleFavorite, isFavorite, 
 
   const checkIsFavorited = (id) => {
     if (isFavorite !== undefined) return isFavorite;
-    return isProductFavorited(id);
+    return contextIsProductFavorited(id);
   };
 
   // Updated favorite toggle function to not navigate
@@ -22,11 +22,11 @@ function ProductCard({ product, toggleFavorite: propToggleFavorite, isFavorite, 
     e.preventDefault();
     e.stopPropagation();
     
-    // Use prop toggleFavorite if provided, otherwise use context's toggleFavorite
-    if (propToggleFavorite) {
-      propToggleFavorite(id);
-    } else {
-      contextToggleFavorite(id);
+    // Use toggleFavorite if provided, otherwise use context's addToFavorites
+    if (toggleFavorite) {
+      toggleFavorite(id);
+    } else if (addToFavorites) {
+      addToFavorites(id);
     }
   };
   
@@ -153,7 +153,7 @@ function ProductCard({ product, toggleFavorite: propToggleFavorite, isFavorite, 
         >
           {checkIsFavorited(product.id) ? '❤️' : '🤍'}
         </button>
-        </div>
+      </div>
       
       <div className="product-info" onClick={handleViewDetails}>
         <h3 className="product-title">{title}</h3>

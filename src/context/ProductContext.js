@@ -19,6 +19,11 @@ export const ProductProvider = ({ children }) => {
   const [favoriteIds, setFavoriteIds] = useState([]); // Keep IDs for checking
   const [favorites, setFavorites] = useState([]); // Store full product objects
   const [loading, setLoading] = useState(true);
+  const [currentUser, setCurrentUser] = useState({
+    id: "user123", // Temporary ID for demo
+    name: "Test User",
+    email: "user@example.com"
+  });
 
   // Load products from localStorage or mock data
   useEffect(() => {
@@ -103,7 +108,9 @@ export const ProductProvider = ({ children }) => {
       ...product, 
       id: Date.now(),
       status: 'active',
-      inStock: true
+      inStock: true,
+      seller: currentUser.name,
+      sellerId: currentUser.id // Ensure the current user's ID is attached to the product
     };
     
     const newProducts = [...products, newProduct];
@@ -191,7 +198,7 @@ export const ProductProvider = ({ children }) => {
     }
   };
 
-  // Toggle favorite status
+  // Toggle favorite status without navigation
   const toggleFavorite = (productId) => {
     const numId = typeof productId === 'string' ? parseInt(productId) : productId;
     
@@ -228,6 +235,11 @@ export const ProductProvider = ({ children }) => {
     return favoriteIds.includes(numId);
   };
 
+  // Navigate to favorites page
+  const navigateToFavorites = (navigate) => {
+    navigate('/favorites');
+  };
+
   // Navigate to favorites page after adding a product
   const addToFavoritesAndNavigate = (productId, navigate) => {
     // First ensure the product is favorited
@@ -235,7 +247,7 @@ export const ProductProvider = ({ children }) => {
       toggleFavorite(productId);
     }
     // Then navigate to favorites page
-    navigate('/favorites');
+    navigateToFavorites(navigate);
   };
 
   // Get sorted favorites based on sort method
@@ -248,13 +260,15 @@ export const ProductProvider = ({ children }) => {
     });
   };
 
-  // Get user's listings
-  const userListings = products.filter(product => product.sellerId === "user-123"); // Replace with actual user ID
+  // Get user's listings - updated to use currentUser.id for filtering
+  const getUserListings = () => {
+    return products.filter(product => product.sellerId === currentUser.id);
+  };
 
   return (
     <ProductContext.Provider value={{ 
       products, 
-      userListings,
+      userListings: getUserListings(), // Now computed dynamically based on current user
       loading, 
       addProduct,
       getProductById,
@@ -262,10 +276,12 @@ export const ProductProvider = ({ children }) => {
       deleteProduct,
       updateProductStatus,
       toggleFavorite,
+      navigateToFavorites,
       addToFavoritesAndNavigate,
       isProductFavorited,
       favorites,
-      getSortedFavorites
+      getSortedFavorites,
+      currentUser
     }}>
       {children}
     </ProductContext.Provider>

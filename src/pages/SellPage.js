@@ -4,9 +4,9 @@ import { useProducts } from '../context/ProductContext';
 import { compressImage } from '../utils/imageUtils'; // Import the new utility
 import './SellPage.css';
 
-function SellPage({ currentUser }) {
+function SellPage() {
   const navigate = useNavigate();
-  const { addProduct } = useProducts();
+  const { addProduct, currentUser } = useProducts();
   
   const [formData, setFormData] = useState({
     title: '',
@@ -86,6 +86,12 @@ function SellPage({ currentUser }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
+    if (!currentUser) {
+      alert("You need to be logged in to sell items");
+      navigate('/login');
+      return;
+    }
+    
     try {
       // Add the product using our context function
       const newProduct = addProduct({
@@ -93,16 +99,17 @@ function SellPage({ currentUser }) {
         price: parseFloat(formData.price) || 0,
         originalPrice: formData.originalPrice ? parseFloat(formData.originalPrice) : null,
         image: images.main || '/images/textbook.png', // Use uploaded image or default
-        seller: currentUser?.name || "Anonymous",
-        sellerId: currentUser?.id || "guest-user",
+        seller: currentUser.name,
+        sellerId: currentUser.id,
         inStock: true,
-        additionalImages: images.additional.filter(img => img !== null)
+        additionalImages: images.additional.filter(img => img !== null),
+        dateAdded: Date.now()
       });
       
       console.log('Product added successfully:', newProduct);
       
-      // Navigate to browse page to see the new listing
-      navigate('/browse');
+      // Navigate to profile page to see user listings
+      navigate('/profile');
     } catch (error) {
       console.error("Error adding product:", error);
       alert("There was an error adding your product. Please try again with smaller images.");

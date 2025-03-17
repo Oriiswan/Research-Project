@@ -4,8 +4,10 @@ import { useProducts } from '../context/ProductContext';
 import './ProfilePage.css';
 
 const ProfilePage = ({ currentUser }) => {
-  const { userListings, updateProductStatus } = useProducts();
+  const { userListings, updateProductStatus, deleteProduct } = useProducts();
   const [isEditing, setIsEditing] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [productToDelete, setProductToDelete] = useState(null);
   const [formData, setFormData] = useState({
     name: currentUser?.name || 'Your Name',
     email: currentUser?.email || 'user@example.com',
@@ -54,6 +56,22 @@ const ProfilePage = ({ currentUser }) => {
   
   const handleStatusChange = (itemId, newStatus) => {
     updateProductStatus(itemId, newStatus);
+  };
+  
+  // Handle delete confirmation
+  const confirmDelete = (productId) => {
+    const product = userListings.find(item => item.id === productId);
+    setProductToDelete(product);
+    setShowDeleteModal(true);
+  };
+  
+  // Handle final delete
+  const handleDelete = () => {
+    if (productToDelete) {
+      deleteProduct(productToDelete.id);
+      setShowDeleteModal(false);
+      setProductToDelete(null);
+    }
   };
   
   return (
@@ -215,6 +233,12 @@ const ProfilePage = ({ currentUser }) => {
                       <option value="active">Active</option>
                       <option value="sold">Sold</option>
                     </select>
+                    <button 
+                      className="delete-button"
+                      onClick={() => confirmDelete(listing.id)}
+                    >
+                      Remove
+                    </button>
                   </div>
                 </div>
               </div>
@@ -227,6 +251,32 @@ const ProfilePage = ({ currentUser }) => {
           </div>
         )}
       </div>
+      
+      {/* Delete Confirmation Modal */}
+      {showDeleteModal && (
+        <div className="modal-overlay">
+          <div className="delete-modal">
+            <h3>Confirm Deletion</h3>
+            <p>Are you sure you want to remove <strong>{productToDelete?.title}</strong>?</p>
+            <p>This action cannot be undone.</p>
+            
+            <div className="modal-actions">
+              <button 
+                className="cancel-modal-btn"
+                onClick={() => setShowDeleteModal(false)}
+              >
+                Cancel
+              </button>
+              <button 
+                className="confirm-delete-btn"
+                onClick={handleDelete}
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

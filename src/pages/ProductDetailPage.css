@@ -279,3 +279,7 @@
     width: 100%;
   }
 }
+
+.negotiable-badge {
+  display: block;
+}

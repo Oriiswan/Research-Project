@@ -6,7 +6,7 @@ import './ProductDetailPage.css';
 function ProductDetailsPage() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { products, toggleFavorite, isProductFavorited } = useProducts();
+  const { products } = useProducts();
   const [message, setMessage] = useState('');
   
   // Find the product with the matching ID
@@ -25,7 +25,7 @@ function ProductDetailsPage() {
     );
   }
   
-  const favorited = isProductFavorited(product.id);
+
   
   const handleSendMessage = () => {
     if (!message.trim()) return;
@@ -44,7 +44,7 @@ function ProductDetailsPage() {
   
   return (
     <div className="product-detail-page">
-      <div className="product-detail-container">
+      <div className="product-detail-container">  
         <div className="product-detail-navigation">
           <a href="#" className="back-link" onClick={handleBack}>
             &larr; Back to Browse
@@ -156,12 +156,7 @@ function ProductDetailsPage() {
               </div>
             </div>
             
-            <button 
-              className={`favorite-button ${favorited ? 'favorited' : ''}`}
-              onClick={() => toggleFavorite(product.id)}
-            >
-              {favorited ? 'Remove from Favorites' : 'Add to Favorites'}
-            </button>
+            
           </div>
         </div>
       </div>

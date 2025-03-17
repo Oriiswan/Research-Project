@@ -178,13 +178,13 @@ function SellPage() {
               </div>
               
               <div className="form-group">
-                <label htmlFor="subcategory">Subcategory *</label>
+                <label htmlFor="subcategory">Optional for Textbook*</label>
                 <select
                   id="subcategory"
                   name="subcategory"
                   value={formData.subcategory}
                   onChange={handleChange}
-                  required
+                  
                 >
                   <option value="Mathematics">Mathematics</option>
                   <option value="Science">Science</option>

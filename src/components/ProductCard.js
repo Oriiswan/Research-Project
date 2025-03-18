@@ -12,6 +12,13 @@ function ProductCard({ product, toggleFavorite: propToggleFavorite, isFavorite, 
   const modalRef = useRef(null);
   const navigate = useNavigate();
 
+  // Check if this is the current user's product
+ const isOwnProduct = currentUser && (
+  currentUser.id === sellerId || 
+  currentUser.id === product.sellerId ||
+  currentUser.name === seller
+);
+
   const checkIsFavorited = (id) => {
     if (isFavorite !== undefined) return isFavorite;
     return isProductFavorited(id);
@@ -66,6 +73,12 @@ function ProductCard({ product, toggleFavorite: propToggleFavorite, isFavorite, 
       },
       unread: false
     };
+    console.log("Product owner check:", {
+      "currentUser": currentUser,
+      "product.sellerId": sellerId,
+      "product.seller": seller,
+      "isOwnProduct": isOwnProduct
+    });
     
     // Store the conversation in localStorage
     const existingConversations = JSON.parse(localStorage.getItem('conversations')) || [];
@@ -133,10 +146,14 @@ function ProductCard({ product, toggleFavorite: propToggleFavorite, isFavorite, 
 
   return (
     <div 
-      className="product-card" 
+      className={`product-card ${isOwnProduct ? 'my-product' : ''}`}
       onMouseEnter={() => setIsHovering(true)}
       onMouseLeave={() => setIsHovering(false)}
     >
+      {isOwnProduct && (
+        <div className="my-product-badge">My Listing</div>
+      )}
+      
       <div className="product-image" onClick={handleViewDetails}>
         <img 
           src={image || '/images/textbook.png'} 
@@ -153,7 +170,7 @@ function ProductCard({ product, toggleFavorite: propToggleFavorite, isFavorite, 
         >
           {checkIsFavorited(product.id) ? '❤️' : '🤍'}
         </button>
-        </div>
+      </div>
       
       <div className="product-info" onClick={handleViewDetails}>
         <h3 className="product-title">{title}</h3>
@@ -164,7 +181,9 @@ function ProductCard({ product, toggleFavorite: propToggleFavorite, isFavorite, 
         )}
         
         {seller && (
-          <p className="product-seller">Seller: {seller}</p>
+          <p className="product-seller">
+            {isOwnProduct ? 'Listed by: You' : `Seller: ${seller}`}
+          </p>
         )}
         
         <div className="product-status">
@@ -177,36 +196,54 @@ function ProductCard({ product, toggleFavorite: propToggleFavorite, isFavorite, 
       </div>
       
       <div className="product-actions">
-        <button 
-          className="message-btn" 
-          onClick={(e) => {
-            e.stopPropagation();
-            setShowMessageModal(true);
-          }}
-          disabled={!inStock}
-        >
-          Message Seller
-        </button>
-        <button 
-          className="details-btn" 
-          onClick={handleViewDetails}
-        >
-          Details
-        </button>
-      </div>
+  {isOwnProduct ? (
+    <>
+      <button 
+        className="edit-btn" 
+        onClick={(e) => {
+          e.stopPropagation();
+          navigate(`/edit-product/${id}`);
+        }}
+      >
+        Edit Listing
+      </button>
+      <button 
+        className="details-btn" 
+        onClick={handleViewDetails}
+      >
+        View Details
+      </button>
+    </>
+  ) : (
+    <>
+      <button 
+        className="message-btn" 
+        onClick={(e) => {
+          e.stopPropagation();
+          setShowMessageModal(true);
+        }}
+        disabled={!inStock}
+      >
+        Message Seller
+      </button>
+      <button 
+        className="details-btn" 
+        onClick={handleViewDetails}
+      >
+        Details
+      </button>
+    </>
+  )}
+</div>
 
       {/* Message Modal */}
-      {showMessageModal && (
+      {showMessageModal && !isOwnProduct && (
         <div className="message-modal-overlay">
           <div className="message-modal" ref={modalRef}>
             <div className="message-modal-header">
-              <h3>Message to {seller}</h3>
-              <button 
-                className="close-modal-btn"
-                onClick={() => setShowMessageModal(false)}
-              >
-                ×
-              </button>
+            {!isOwnProduct && (
+  <button className="message-seller-btn">Message Seller</button>
+)}
             </div>
             <div className="message-modal-content">
               <p>About: {title}</p>

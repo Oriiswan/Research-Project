@@ -6,7 +6,12 @@ import './ProductDetailPage.css';
 function ProductDetailsPage() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { products } = useProducts();
+  const { 
+    products, 
+    currentUser, 
+    updateProductStatus, 
+    deleteProduct 
+  } = useProducts();
   const [message, setMessage] = useState('');
   
   // Find the product with the matching ID
@@ -25,8 +30,9 @@ function ProductDetailsPage() {
     );
   }
   
+  // Check if this is the current user's product
+  const isOwnProduct = currentUser && currentUser.id === product.sellerId;
 
-  
   const handleSendMessage = () => {
     if (!message.trim()) return;
     
@@ -38,18 +44,43 @@ function ProductDetailsPage() {
     alert("Message sent successfully!");
   };
   
+  const handleToggleAvailability = () => {
+    // Update the product status in context
+    updateProductStatus(id, product.inStock ? 'sold' : 'active');
+    // Navigate back to profile page after update
+    navigate('/profile');
+  };
+
+  const handleDeleteListing = () => {
+    // Delete the product in context
+    deleteProduct(id);
+    // Navigate back to profile
+    navigate('/profile');
+  };
+
   const handleBack = () => {
     navigate(-1);
   };
   
+  const handleEditListing = () => {
+    navigate(`/edit-product/${id}`);
+  };
+  
   return (
-    <div className="product-detail-page">
+    <div className={`product-detail-page ${isOwnProduct ? 'my-product-detail' : ''}`}>
       <div className="product-detail-container">  
         <div className="product-detail-navigation">
           <a href="#" className="back-link" onClick={handleBack}>
             &larr; Back to Browse
           </a>
         </div>
+        
+        {isOwnProduct && (
+          <div className="owner-banner">
+            <div className="owner-badge">Your Listing</div>
+            <p>You are viewing your own listing. Other users see this as a regular product.</p>
+          </div>
+        )}
         
         <div className="product-detail-content">
           <div className="product-detail-image">
@@ -109,13 +140,13 @@ function ProductDetailsPage() {
             </div>
             
             <div className="seller-info">
-              <h3>Seller Information</h3>
+              <h3>{isOwnProduct ? 'Your Seller Information' : 'Seller Information'}</h3>
               <div className="seller-profile">
                 <div className="seller-avatar">
                   {product.seller.charAt(0)}
                 </div>
                 <div className="seller-details">
-                  <h4>{product.seller}</h4>
+                  <h4>{isOwnProduct ? `${product.seller} (You)` : product.seller}</h4>
                   <p>Member since {product.memberSince || "2023"}</p>
                 </div>
               </div>
@@ -138,25 +169,41 @@ function ProductDetailsPage() {
               )}
             </div>
             
-            <div className="message-section">
-              <h3>Send a Message to the Seller</h3>
-              <div className="message-form">
-                <textarea 
-                  placeholder="Type your message here..." 
-                  value={message}
-                  onChange={(e) => setMessage(e.target.value)}
-                ></textarea>
+            {isOwnProduct ? (
+              <div className="owner-actions">
+                
                 <button 
-                  className="send-message-btn" 
-                  onClick={handleSendMessage}
-                  disabled={!message.trim()}
+                  className="toggle-availability-btn"
+                  onClick={handleToggleAvailability}
                 >
-                  Send Message
+                  {product.inStock ? 'Mark as Sold' : 'Mark as Available'}
+                </button>
+                <button 
+                  className="delete-listing-btn"
+                  onClick={handleDeleteListing}
+                >
+                  Delete Listing
                 </button>
               </div>
-            </div>
-            
-            
+            ) : (
+              <div className="message-section">
+                <h3>Send a Message to the Seller</h3>
+                <div className="message-form">
+                  <textarea 
+                    placeholder="Type your message here..." 
+                    value={message}
+                    onChange={(e) => setMessage(e.target.value)}
+                  ></textarea>
+                  <button 
+                    className="send-message-btn" 
+                    onClick={handleSendMessage}
+                    disabled={!message.trim()}
+                  >
+                    Send Message
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>

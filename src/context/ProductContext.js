@@ -113,6 +113,8 @@ export const ProductProvider = ({ children }) => {
       sellerId: currentUser.id // Ensure the current user's ID is attached to the product
     };
     
+    
+    
     const newProducts = [...products, newProduct];
     
     try {
@@ -170,32 +172,50 @@ export const ProductProvider = ({ children }) => {
 
   // Delete a product
   const deleteProduct = (id) => {
-    const newProducts = products.filter(product => product.id !== id);
+    const numId = typeof id === 'string' ? parseInt(id) : id;
+    const newProducts = products.filter(product => product.id !== numId);
     setProducts(newProducts);
     localStorage.setItem('products', JSON.stringify(newProducts));
     
     // If this product is in favorites, remove it
-    if (isProductFavorited(id)) {
-      toggleFavorite(id);
+    if (isProductFavorited(numId)) {
+      toggleFavorite(numId);
     }
   };
 
   // Update product status
   const updateProductStatus = (productId, status) => {
+    const numId = typeof productId === 'string' ? parseInt(productId) : productId;
     const updatedProducts = products.map(product => 
-      product.id === productId ? { ...product, status } : product
+      product.id === numId ? { 
+        ...product, 
+        status,
+        inStock: status === 'active' 
+      } : product
     );
     setProducts(updatedProducts);
     localStorage.setItem('products', JSON.stringify(updatedProducts));
     
     // Update in favorites if needed
-    if (isProductFavorited(productId)) {
-      const updatedProduct = updatedProducts.find(p => p.id === productId);
+    if (isProductFavorited(numId)) {
+      const updatedProduct = updatedProducts.find(p => p.id === numId);
       const updatedFavorites = favorites.map(fav => 
-        fav.id === productId ? { ...updatedProduct, dateAdded: fav.dateAdded } : fav
+        fav.id === numId ? { ...updatedProduct, dateAdded: fav.dateAdded } : fav
       );
       setFavorites(updatedFavorites);
     }
+  };
+
+  // Check if a product belongs to the current user
+  const isOwnProduct = (product) => {
+    // More robust check to handle different ID formats and potential string/number mismatches
+    if (!product || !currentUser) return false;
+    
+    const productSellerId = typeof product.sellerId === 'string' ? product.sellerId : String(product.sellerId);
+    const currentUserId = typeof currentUser.id === 'string' ? currentUser.id : String(currentUser.id);
+    
+    return productSellerId === currentUserId || 
+           product.seller === currentUser.name;
   };
 
   // Toggle favorite status without navigation
@@ -262,7 +282,10 @@ export const ProductProvider = ({ children }) => {
 
   // Get user's listings - updated to use currentUser.id for filtering
   const getUserListings = () => {
-    return products.filter(product => product.sellerId === currentUser.id);
+    return products.filter(product => 
+      product.sellerId === currentUser.id || 
+      product.seller === currentUser.name
+    );
   };
 
   return (
@@ -279,6 +302,7 @@ export const ProductProvider = ({ children }) => {
       navigateToFavorites,
       addToFavoritesAndNavigate,
       isProductFavorited,
+      isOwnProduct, // Add the new function to the context
       favorites,
       getSortedFavorites,
       currentUser

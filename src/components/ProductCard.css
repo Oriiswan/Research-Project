@@ -308,3 +308,38 @@
     grid-template-columns: 1fr;
   }
 }
+
+.product-card.my-product {
+  border: 2px solid #4CAF50;
+  box-shadow: 0 4px 8px rgba(76, 175, 80, 0.2);
+  position: relative;
+}
+
+.my-product-badge {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background-color: #4CAF50;
+  color: white;
+  padding: 5px 10px;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: bold;
+  z-index: 10;
+}
+
+/* Style for edit button */
+.edit-btn {
+  background-color: #FFA726;
+  color: white;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: background-color 0.3s;
+}
+
+.edit-btn:hover {
+  background-color: #FB8C00;
+}

@@ -343,3 +343,132 @@
 .edit-btn:hover {
   background-color: #FB8C00;
 }
+
+.product-card {
+  position: relative;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.product-card.my-product {
+  border: 2px solid #4CAF50;
+  /* Green border for your listings */
+}
+
+.my-product-badge {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background-color: #4CAF50;
+  /* Green background */
+  color: white;
+  padding: 5px 10px;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  font-weight: bold;
+  z-index: 10;
+}
+
+.product-image {
+  position: relative;
+  height: 20px;
+  overflow: hidden;
+}
+
+.product-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.favorite-button {
+  position: absolute;
+  bottom: 10px;
+  right: 10px;
+  background-color: white;
+  border: none;
+  border-radius: 50%;
+  padding: 5px;
+  cursor: pointer;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+.product-info {
+  padding: 15px;
+}
+
+.product-title {
+  margin: 0 0 10px 0;
+  font-size: 1rem;
+  font-weight: bold;
+}
+
+.product-price {
+  color: #4CAF50;
+  font-weight: bold;
+  margin: 5px 0;
+}
+
+.product-condition {
+  color: #666;
+  font-size: 0.9rem;
+  margin: 5px 0;
+}
+
+.product-seller {
+  font-size: 0.9rem;
+  margin: 5px 0;
+  color: #333;
+}
+
+.product-status {
+  margin-top: 10px;
+}
+
+.in-stock {
+  color: #4CAF50;
+  font-weight: bold;
+}
+
+.out-of-stock {
+  color: #f44336;
+  font-weight: bold;
+}
+
+.product-actions {
+  display: flex;
+  justify-content: space-between;
+  padding: 10px 15px;
+  border-top: 1px solid #e0e0e0;
+}
+
+.product-actions button {
+  padding: 8px 12px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.edit-btn {
+  background-color: #f0f0f0;
+  color: #333;
+}
+
+.details-btn {
+  background-color: #2196F3;
+  color: white;
+}
+
+.message-btn {
+  background-color: #4CAF50;
+  color: white;
+}
+
+.message-btn:disabled {
+  background-color: #a5d6a7;
+  cursor: not-allowed;
+}

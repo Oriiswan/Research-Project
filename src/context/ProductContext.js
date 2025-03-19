@@ -1,5 +1,5 @@
-import React, { createContext, useState, useEffect, useContext } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { createContext, useState, useContext, useEffect } from 'react';
+import { useAuth } from '../App'; // Import the auth context
 
 // Create the context
 export const ProductContext = createContext();
@@ -13,21 +13,15 @@ export const useProducts = () => {
   return context;
 };
 
-// Create the provider component
 export const ProductProvider = ({ children }) => {
+  const { currentUser } = useAuth(); // Get current user from auth context
   const [products, setProducts] = useState([]);
   const [favoriteIds, setFavoriteIds] = useState([]); // Keep IDs for checking
   const [favorites, setFavorites] = useState([]); // Store full product objects
   const [loading, setLoading] = useState(true);
-  const [currentUser, setCurrentUser] = useState({
-    id: "user123", // Temporary ID for demo
-    name: "Test User",
-    email: "user@example.com"
-  });
 
-  // Load products from localStorage or mock data
+  // Load products and favorites from localStorage on initial render
   useEffect(() => {
-    // Try to get products from localStorage
     const storedProducts = localStorage.getItem('products');
     const storedFavoriteIds = localStorage.getItem('favoriteIds');
     
@@ -53,55 +47,14 @@ export const ProductProvider = ({ children }) => {
         setFavorites(favProducts);
       }
     } else {
-      // Set some initial mock products 
-      const initialProducts = [
-        {
-          id: 1,
-          title: "Calculus Textbook",
-          price: 450,
-          image: "/images/textbook.png",
-          condition: "Good",
-          description: "Slightly used calculus textbook for MATH101",
-          seller: "Jane Student",
-          sellerId: "user-123",
-          inStock: true,
-          category: "Books",
-          status: "active"
-        },
-        {
-          id: 2,
-          title: "Scientific Calculator",
-          price: 350,
-          image: "/images/calculator.png",
-          condition: "Like New",
-          description: "Graphing calculator, perfect for science and math classes",
-          seller: "Sam Tutor",
-          sellerId: "user-456",
-          inStock: true,
-          category: "Electronics",
-          status: "active"
-        },
-        {
-          id: 3,
-          title: "Lab Coat",
-          price: 200,
-          image: "/images/power-bank.png",
-          condition: "New",
-          description: "White lab coat, size M, never used",
-          seller: "Chemistry Club",
-          sellerId: "org-789",
-          inStock: true,
-          category: "Clothing",
-          status: "active"
-        }
-      ];
-      setProducts(initialProducts);
-      localStorage.setItem('products', JSON.stringify(initialProducts));
+      // Initialize with empty products array
+      setProducts([]);
+      localStorage.setItem('products', JSON.stringify([]));
     }
     
     setLoading(false);
   }, []);
-
+  
   // Add a new product
   const addProduct = (product) => {
     const newProduct = { 
@@ -109,11 +62,9 @@ export const ProductProvider = ({ children }) => {
       id: Date.now(),
       status: 'active',
       inStock: true,
-      seller: currentUser.name,
-      sellerId: currentUser.id // Ensure the current user's ID is attached to the product
+      sellerName: currentUser ? currentUser.name : 'Unknown',
+      sellerId: currentUser ? currentUser.id : 'unknown'
     };
-    
-    
     
     const newProducts = [...products, newProduct];
     
@@ -124,7 +75,7 @@ export const ProductProvider = ({ children }) => {
       
       localStorage.setItem('products', productsString);
       setProducts(newProducts);
-      console.log("Product added with image successfully");
+      console.log("Product added successfully");
       return newProduct;
     } catch (e) {
       console.error("Error saving to localStorage:", e);
@@ -208,17 +159,22 @@ export const ProductProvider = ({ children }) => {
 
   // Check if a product belongs to the current user
   const isOwnProduct = (product) => {
-    // More robust check to handle different ID formats and potential string/number mismatches
     if (!product || !currentUser) return false;
     
-    const productSellerId = typeof product.sellerId === 'string' ? product.sellerId : String(product.sellerId);
-    const currentUserId = typeof currentUser.id === 'string' ? currentUser.id : String(currentUser.id);
+    // Ensure both IDs are strings for comparison
+    const productSellerId = String(product.sellerId);
+    const userSellerId = String(currentUser.id);
     
-    return productSellerId === currentUserId || 
-           product.seller === currentUser.name;
+    console.log("Comparing seller IDs:", {
+      productSellerId,
+      userSellerId,
+      isMatch: productSellerId === userSellerId
+    });
+    
+    return productSellerId === userSellerId;
   };
 
-  // Toggle favorite status without navigation
+  // Toggle favorite status
   const toggleFavorite = (productId) => {
     const numId = typeof productId === 'string' ? parseInt(productId) : productId;
     
@@ -248,6 +204,32 @@ export const ProductProvider = ({ children }) => {
       }
     }
   };
+
+const loadUsers = () => {
+  const storedUsers = JSON.parse(localStorage.getItem('users')) || [];
+  if (storedUsers.length === 0) {
+    // Add mock users similar to what's in LoginPage.js
+    const mockUsers = [
+      {
+        id: 301,
+        name: "Mark Buensalido",
+        email: "markbuensalido@filamer.edu.ph",
+        password: "password123",
+        phone: "09624493722",
+        bio: "Senior at FCU, TVL-ICT student. I love finding affordable textbooks and lab equipment!",
+        location: "FCU Campus, Building C",
+        avatar: "/images/markavatar.png",
+      },
+      // Add other mock users...
+    ];
+    localStorage.setItem('users', JSON.stringify(mockUsers));
+    return mockUsers;
+  }
+  return storedUsers;
+};
+
+// Use this in your context provider initialization
+const users = loadUsers();
 
   // Check if a product is favorited
   const isProductFavorited = (productId) => {
@@ -280,18 +262,30 @@ export const ProductProvider = ({ children }) => {
     });
   };
 
-  // Get user's listings - updated to use currentUser.id for filtering
+  // Get user's listings
   const getUserListings = () => {
-    return products.filter(product => 
-      product.sellerId === currentUser.id || 
-      product.seller === currentUser.name
-    );
+    if (!currentUser) return [];
+    
+    return products.filter(product => {
+      const productSellerId = String(product.sellerId);
+      const userSellerId = String(currentUser.id);
+      
+      console.log("Checking listing:", {
+        productTitle: product.title,
+        productSellerId,
+        userSellerId,
+        isMatch: productSellerId === userSellerId
+      });
+      
+      return productSellerId === userSellerId;
+    });
   };
+  
 
   return (
     <ProductContext.Provider value={{ 
       products, 
-      userListings: getUserListings(), // Now computed dynamically based on current user
+      userListings: getUserListings(), 
       loading, 
       addProduct,
       getProductById,
@@ -302,8 +296,9 @@ export const ProductProvider = ({ children }) => {
       navigateToFavorites,
       addToFavoritesAndNavigate,
       isProductFavorited,
-      isOwnProduct, // Add the new function to the context
+      isOwnProduct,
       favorites,
+      favoriteIds,
       getSortedFavorites,
       currentUser
     }}>

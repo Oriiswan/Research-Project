@@ -34,14 +34,77 @@ function ProductDetailsPage() {
   const isOwnProduct = currentUser && currentUser.id === product.sellerId;
 
   const handleSendMessage = () => {
-    if (!message.trim()) return;
+    if (!message.trim() || !currentUser) return;
     
-    // Here you would typically send the message or store it
-    console.log("Message sent:", message);
+    // Get existing conversations
+    const storedConversations = JSON.parse(localStorage.getItem('conversations')) || [];
+    
+    // Find seller info - assuming seller info is in the product
+    const sellerInfo = {
+      id: product.sellerId,
+      name: product.seller,
+      avatar: product.sellerAvatar // Make sure this is available from the product
+    };
+    
+    // Create new conversation or find existing one
+    let conversation = storedConversations.find(
+      conv => conv.product.id === product.id && 
+      conv.participants.buyer.id === currentUser.id &&
+      conv.participants.seller.id === product.sellerId
+    );
+    
+    if (!conversation) {
+      // Create new conversation with proper avatar info
+      conversation = {
+        id: Date.now(),
+        product: {
+          id: product.id,
+          title: product.title,
+          image: product.image,
+          price: product.price
+        },
+        participants: {
+          seller: sellerInfo,
+          buyer: {
+            id: currentUser.id,
+            name: currentUser.name,
+            avatar: currentUser.avatar
+          }
+        },
+        messages: [],
+        lastMessage: {
+          text: "",
+          timestamp: new Date(),
+          senderId: 0
+        },
+        unread: false
+      };
+      
+      storedConversations.push(conversation);
+    }
+    
+    // Add the new message
+    const newMessageObj = {
+      id: Date.now(),
+      senderId: currentUser.id,
+      text: message,
+      timestamp: new Date()
+    };
+    
+    conversation.messages.push(newMessageObj);
+    conversation.lastMessage = {
+      text: message,
+      timestamp: new Date(),
+      senderId: currentUser.id
+    };
+    conversation.unread = true;
+    
+    // Update localStorage
+    localStorage.setItem('conversations', JSON.stringify(storedConversations));
+    
+    // Reset message field and navigate or notify
     setMessage('');
-    
-    // You could navigate to messages page or show a success notification
-    alert("Message sent successfully!");
+    navigate('/messages');
   };
   
   const handleToggleAvailability = () => {

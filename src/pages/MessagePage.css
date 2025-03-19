@@ -235,10 +235,7 @@
   background-color: #fff;
 }
 
-.product-info {
-  display: flex;
-  align-items: center;
-}
+
 
 .product-info img {
   width: 40px;
@@ -250,7 +247,7 @@
 
 .product-info h3 {
   margin: 0 0 4px 0;
-  font-size: 15px;
+  font-size: 20px;
 }
 
 .product-info p {

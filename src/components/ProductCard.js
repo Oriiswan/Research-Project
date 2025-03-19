@@ -13,11 +13,10 @@ function ProductCard({ product, toggleFavorite: propToggleFavorite, isFavorite, 
   const navigate = useNavigate();
 
   // Check if this is the current user's product
- const isOwnProduct = currentUser && (
-  currentUser.id === sellerId || 
-  currentUser.id === product.sellerId ||
-  currentUser.name === seller
-);
+  const isOwnProduct = currentUser && (
+    String(currentUser.id) === String(sellerId) || 
+    String(currentUser.id) === String(product.sellerId)
+  );
 
   const checkIsFavorited = (id) => {
     if (isFavorite !== undefined) return isFavorite;
@@ -155,22 +154,25 @@ function ProductCard({ product, toggleFavorite: propToggleFavorite, isFavorite, 
       )}
       
       <div className="product-image" onClick={handleViewDetails}>
-        <img 
-          src={image || '/images/textbook.png'} 
-          alt={title} 
-          onError={(e) => {
-            console.log("Image failed to load, falling back to default");
-            e.target.src = '/images/textbook.png';
-          }}
-        />
-        <button 
-          className={`favorite-button ${checkIsFavorited(product.id) ? 'favorited' : ''}`}
-          onClick={handleFavoriteToggle}
-          aria-label={checkIsFavorited(product.id) ? 'Remove from favorites' : 'Add to favorites'}
-        >
-          {checkIsFavorited(product.id) ? '❤️' : '🤍'}
-        </button>
-      </div>
+  <img 
+    src={image || '/images/textbook.png'} 
+    alt={title} 
+    onError={(e) => {
+      console.log("Image failed to load, falling back to default");
+      e.target.src = '/images/textbook.png';
+    }}
+  />
+  {/* Only show favorite button if it's NOT the user's own product */}
+  {!isOwnProduct && (
+    <button 
+      className={`favorite-button ${checkIsFavorited(product.id) ? 'favorited' : ''}`}
+      onClick={handleFavoriteToggle}
+      aria-label={checkIsFavorited(product.id) ? 'Remove from favorites' : 'Add to favorites'}
+    >
+      {checkIsFavorited(product.id) ? '❤️' : '🤍'}
+    </button>
+  )}
+</div>
       
       <div className="product-info" onClick={handleViewDetails}>
         <h3 className="product-title">{title}</h3>
@@ -188,7 +190,7 @@ function ProductCard({ product, toggleFavorite: propToggleFavorite, isFavorite, 
         
         <div className="product-status">
           {inStock ? (
-            <span className="in-stock">In Stock</span>
+            <span className="in-stock">Available</span>
           ) : (
             <span className="out-of-stock">Out of Stock</span>
           )}

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import './MessagePage.css';
 
-function MessagePage({ currentUser }) {
+function MessagePage({ currentUser, onConversationsUpdate }) {
   const [conversations, setConversations] = useState([]);
   const [selectedConversation, setSelectedConversation] = useState(null);
   const [newMessage, setNewMessage] = useState('');
@@ -9,10 +9,20 @@ function MessagePage({ currentUser }) {
   const [activeTab, setActiveTab] = useState('all'); // 'all', 'buying', 'selling'
   const messagesEndRef = useRef(null);
 
+  // Update the parent component whenever conversations change
+  useEffect(() => {
+    if (conversations.length > 0 && onConversationsUpdate) {
+      onConversationsUpdate(conversations);
+    }
+  }, [conversations, onConversationsUpdate]);
+
   // Load conversations from localStorage or API
   useEffect(() => {
     // First check localStorage for messages created from ProductCard
     const storedConversations = JSON.parse(localStorage.getItem('conversations')) || [];
+    
+    // Get all users to access their avatars
+    const users = JSON.parse(localStorage.getItem('users')) || [];
     
     // Mock data for development with correct image paths
     const mockConversations = [
@@ -21,7 +31,7 @@ function MessagePage({ currentUser }) {
         product: {
           id: 101,
           title: "Student Artwork",
-          image: "/images/artwork.png", // Updated image path
+          image: "/images/artwork.png",
           price: 500
         },
         participants: {
@@ -48,7 +58,7 @@ function MessagePage({ currentUser }) {
         product: {
           id: 102,
           title: "Calculator",
-          image: "/images/calculator.png", // Updated image path
+          image: "/images/calculator.png",
           price: 80000
         },
         participants: {
@@ -70,7 +80,7 @@ function MessagePage({ currentUser }) {
         product: {
           id: 103,
           title: "Computer Science Textbook",
-          image: "/images/textbook.png", // Updated image path
+          image: "/images/textbook.png",
           price: 1200
         },
         participants: {
@@ -89,44 +99,51 @@ function MessagePage({ currentUser }) {
       }
     ];
     
-    if (storedConversations.length === 0) {
-      // If no stored conversations, use mock data
-      setConversations(mockConversations);
-    } else {
-      // Format dates properly (they come as strings from localStorage)
+    let conversationsData = storedConversations.length === 0 ? mockConversations : storedConversations;
+    
+    // Filter conversations to only include those where currentUser is a participant
+    conversationsData = conversationsData.filter(conv => 
+      conv.participants.seller.id === currentUser.id || 
+      conv.participants.buyer.id === currentUser.id
+    );
+    
+    // Format dates properly and ensure avatar consistency
+    const formattedConversations = conversationsData.map(conv => {
+      // Find seller and buyer users in the users array to get correct avatars
+      const sellerUser = users.find(user => user.id === conv.participants.seller.id) || {};
+      const buyerUser = users.find(user => user.id === conv.participants.buyer.id) || {};
       
-      const formattedConversations = storedConversations.map(conv => {
-        return {
-          ...conv,
-          lastMessage: {
-            ...conv.lastMessage,
-            timestamp: new Date(conv.lastMessage.timestamp)
+      return {
+        ...conv,
+        lastMessage: {
+          ...conv.lastMessage,
+          timestamp: new Date(conv.lastMessage.timestamp)
+        },
+        messages: conv.messages.map(msg => ({
+          ...msg,
+          timestamp: new Date(msg.timestamp)
+        })),
+        // Ensure product has proper image path
+        product: {
+          ...conv.product,
+          image: conv.product.image || getDefaultProductImage(conv.product.title)
+        },
+        // Use the avatar from the user profiles when available
+        participants: {
+          ...conv.participants,
+          seller: {
+            ...conv.participants.seller,
+            avatar: sellerUser.avatar || conv.participants.seller.avatar || "/images/default-avatar.png"
           },
-          messages: conv.messages.map(msg => ({
-            ...msg,
-            timestamp: new Date(msg.timestamp)
-          })),
-          // Ensure all conversations have proper image paths
-          product: {
-            ...conv.product,
-            image: conv.product.image || getDefaultProductImage(conv.product.title)
-          },
-          participants: {
-            ...conv.participants,
-            seller: {
-              ...conv.participants.seller,
-              avatar: conv.participants.seller.avatar || "/images/perfume.png"
-            },
-            buyer: {
-              ...conv.participants.buyer,
-              avatar: conv.participants.buyer.avatar || "/images/calculator.png"
-            }
+          buyer: {
+            ...conv.participants.buyer,
+            avatar: buyerUser.avatar || conv.participants.buyer.avatar || "/images/default-avatar.png"
           }
-        };
-      });
-      
-      setConversations(formattedConversations);
-    }
+        }
+      };
+    });
+    
+    setConversations(formattedConversations);
     
     // Helper function to assign default product images based on product title
     function getDefaultProductImage(title) {
@@ -136,7 +153,10 @@ function MessagePage({ currentUser }) {
       if (title.toLowerCase().includes("calculator")) return "/images/calculator.png";
       return "/images/perfume.png"; // default fallback
     }
-  }, []);
+  }, [currentUser.id]); // Added currentUser.id as a dependency
+
+  // Rest of the component remains the same
+  // ...
 
   // Scroll to bottom when new messages arrive
   useEffect(() => {
@@ -144,6 +164,32 @@ function MessagePage({ currentUser }) {
       messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
     }
   }, [selectedConversation?.messages]);
+
+  // When selecting a conversation, mark it as read
+  const handleSelectConversation = (conversation) => {
+    if (conversation.unread) {
+      // Create a copy with unread set to false
+      const updatedConversation = { ...conversation, unread: false };
+      
+      // Update the conversations array
+      const updatedConversations = conversations.map(conv => 
+        conv.id === conversation.id ? updatedConversation : conv
+      );
+      
+      setConversations(updatedConversations);
+      setSelectedConversation(updatedConversation);
+      
+      // Save to localStorage
+      localStorage.setItem('conversations', JSON.stringify(updatedConversations));
+      
+      // Call the onConversationsUpdate callback to update unread count in header
+      if (onConversationsUpdate) {
+        onConversationsUpdate(updatedConversations);
+      }
+    } else {
+      setSelectedConversation(conversation);
+    }
+  };
 
   const handleSendMessage = (e) => {
     e.preventDefault();
@@ -176,8 +222,12 @@ function MessagePage({ currentUser }) {
     setConversations(updatedConversations);
     setSelectedConversation(updatedConversation);
     
-    // Save the updated conversations list to localStorage
-    localStorage.setItem('conversations', JSON.stringify(updatedConversations));
+    // When updating localStorage, need to update ALL conversations, not just the user's
+    const allStoredConversations = JSON.parse(localStorage.getItem('conversations')) || [];
+    const updatedStoredConversations = allStoredConversations.map(conv => 
+      conv.id === selectedConversation.id ? updatedConversation : conv
+    );
+    localStorage.setItem('conversations', JSON.stringify(updatedStoredConversations));
     
     // Reset input
     setNewMessage('');
@@ -290,7 +340,7 @@ function MessagePage({ currentUser }) {
               <div
                 key={conversation.id}
                 className={`conversation-item ${selectedConversation?.id === conversation.id ? 'selected' : ''} ${conversation.unread ? 'unread' : ''}`}
-                onClick={() => setSelectedConversation(conversation)}
+                onClick={() => handleSelectConversation(conversation)}
               >
                 <div className="conversation-image">
                   {conversation.product.image ? (

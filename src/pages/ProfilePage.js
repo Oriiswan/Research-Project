@@ -1,21 +1,37 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useProducts } from '../context/ProductContext';
+import { useAuth } from '../App'; // Import the auth context
 import './ProfilePage.css';
 
-const ProfilePage = ({ currentUser }) => {
+const ProfilePage = () => {
   const { userListings, updateProductStatus, deleteProduct } = useProducts();
+  const { currentUser, login } = useAuth(); // Get current user from auth context
   const [isEditing, setIsEditing] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [productToDelete, setProductToDelete] = useState(null);
   const [formData, setFormData] = useState({
-    name: currentUser?.name || 'Your Name',
-    email: currentUser?.email || 'user@example.com',
-    phone: currentUser?.phone || '',
-    bio: currentUser?.bio || '',
-    location: currentUser?.location || '',
-    avatar: currentUser?.avatar || ''
+    name: '',
+    email: '',
+    phone: '',
+    bio: '',
+    location: '',
+    avatar: ''
   });
+  
+  // Update form data when currentUser changes
+  useEffect(() => {
+    if (currentUser) {
+      setFormData({
+        name: currentUser.name || '',
+        email: currentUser.email || '',
+        phone: currentUser.phone || '',
+        bio: currentUser.bio || '',
+        location: currentUser.location || '',
+        avatar: currentUser.avatar || ''
+      });
+    }
+  }, [currentUser]);
   
   // Mock user statistics
   const userStats = {
@@ -36,21 +52,35 @@ const ProfilePage = ({ currentUser }) => {
   
   const handleSubmit = (e) => {
     e.preventDefault();
-    // Here you would typically send the updated profile to your API
-    console.log('Profile update submitted:', formData);
-    setIsEditing(false);
-    // In a real application, you would update the currentUser state here
+    // Update the user data in the auth context
+    if (currentUser) {
+      const updatedUser = {
+        ...currentUser,
+        name: formData.name,
+        email: formData.email,
+        phone: formData.phone,
+        bio: formData.bio,
+        location: formData.location,
+        avatar: formData.avatar
+      };
+      
+      // Update the user in the auth context and localStorage
+      login(updatedUser);
+      setIsEditing(false);
+    }
   };
   
   const cancelEdit = () => {
-    setFormData({
-      name: currentUser?.name || 'Your Name',
-      email: currentUser?.email || 'user@example.com',
-      phone: currentUser?.phone || '',
-      bio: currentUser?.bio || '',
-      location: currentUser?.location || '',
-      avatar: currentUser?.avatar || ''
-    });
+    if (currentUser) {
+      setFormData({
+        name: currentUser.name || '',
+        email: currentUser.email || '',
+        phone: currentUser.phone || '',
+        bio: currentUser.bio || '',
+        location: currentUser.location || '',
+        avatar: currentUser.avatar || ''
+      });
+    }
     setIsEditing(false);
   };
   
@@ -73,6 +103,10 @@ const ProfilePage = ({ currentUser }) => {
       setProductToDelete(null);
     }
   };
+  
+  if (!currentUser) {
+    return <div className="loading">Loading profile...</div>;
+  }
   
   return (
     <div className="profile-page">
